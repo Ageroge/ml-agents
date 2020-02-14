@@ -10,14 +10,16 @@ public class ArcherScript : MonoBehaviour
     // speed of rotating archer
     public float angle_speed = 2.0f;
     // timer to make delays between shots
-    public float targetTime = 2.5f;
+    public float targetTime_g = 2.5f;
 
     public GameObject swordsman;
-//    private GameObject hunter;
+
+    float targetTime;
 
     void Start()
     {
-//        hunter = GameObject.Find("Hunter_agent");
+        //        hunter = GameObject.Find("Hunter_agent");
+        targetTime = targetTime_g;
     }
 
     // Update is called once per frame
@@ -29,7 +31,7 @@ public class ArcherScript : MonoBehaviour
 //        if (Input.GetButtonDown("Fire1"))
         if (targetTime <= 0.0f)
         {
-            targetTime = 2.5f;
+            targetTime = targetTime_g;
             Shoot();
         }
     }
@@ -39,11 +41,9 @@ public class ArcherScript : MonoBehaviour
         GameObject instArrow = Instantiate(arrow, transform.position, Quaternion.identity) as GameObject;
         Rigidbody instArrowRigidbody = instArrow.GetComponent<Rigidbody>();
 
-//        Debug.Log("this rot=" + transform.rotation);
-
         instArrowRigidbody.velocity = transform.TransformDirection(Vector3.forward * arrow_speed);
         
-        Destroy(instArrow, 2.0f); // 1 - time in seconds. Live range of arrow
+        Destroy(instArrow, 2.0f); // 1 - time in seconds. time live range of arrow
     }
 
     void LookAtSwordsman(Transform target)

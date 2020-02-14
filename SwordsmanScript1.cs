@@ -7,7 +7,7 @@ public class SwordsmanScript1 : Agent
 {
     // hit points of swordsman. if 0, then he is dead
     public int hitpoints_g = 2;
-    // speed of agent. Valu is overridden in Unity interface.
+    // speed of agent. Value is overridden in Unity interface.
     public float speed = 12;
 
     Rigidbody rBody;
@@ -37,7 +37,7 @@ public class SwordsmanScript1 : Agent
         float randomVal2 = Random.value;
         float randomVal3 = Random.value;
         if (randomVal3 <= 0.5f) {
-            if (randomVal1 <= 0.5f) randomVal1 = 0.0f; else randomVal1 = 1.0f;
+            if (randomVal1 <= 0.5f) randomVal1 = 0.0f;  else randomVal1 = 1.0f;
         }
         else {
             if (randomVal2 <= 0.5f) randomVal2 = 0.0f; else randomVal2 = 1.0f;
@@ -68,9 +68,13 @@ public class SwordsmanScript1 : Agent
         AddVectorObs(rBody.velocity.z);
 
         // Agent hitpoints
-        AddVectorObs(this.hitpoints);
+//        AddVectorObs(this.hitpoints);
     }
 
+    //
+    // IDEIAS to try
+    // - 
+    //
     public override void AgentAction(float[] vectorAction)
     {
         // Actions, size = 2
@@ -85,7 +89,7 @@ public class SwordsmanScript1 : Agent
         // if agents is closer to the target, give him small award
         // and penatly otherwise
         if (distanceToTarget < minDistanceToTarget) {
-            AddReward(0.001f);
+            AddReward(0.003f);
             minDistanceToTarget = distanceToTarget;
         }
         else AddReward(-0.001f);
@@ -103,15 +107,16 @@ public class SwordsmanScript1 : Agent
         }
         // Hit by arrow and maybe even killed
         if (is_collided) {
-            AddReward(-0.2f);
+            AddReward(-0.5f);
             hitpoints--;
             is_collided = false;
             if (hitpoints == 0) {
-                AddReward(-0.6f);
+                AddReward(-1.0f);
                 Done();
             }
         }
-
+        // Push agent do not stay on one place forever. time is time
+        AddReward(-0.0001f);
     }
 
     public override float[] Heuristic()
