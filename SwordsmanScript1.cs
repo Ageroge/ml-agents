@@ -19,7 +19,7 @@ public class SwordsmanScript1 : Agent
     int arenaSizeY = 16;
     // minimal distance between agent and target
     float minDistanceToTarget;
-    int hitpoints = 2;
+    int hitpoints = 1;
 
     void Start()
     {
@@ -95,7 +95,7 @@ public class SwordsmanScript1 : Agent
         else AddReward(-0.001f);
 
         // Reached target
-        if (distanceToTarget < 1.42f) {
+        if (distanceToTarget < 1.0f) {
             AddReward(1.0f);
             Done();
         }
@@ -134,5 +134,9 @@ public class SwordsmanScript1 : Agent
             is_collided = true;
         }
 
+    }
+
+    public bool GetCollision() {
+        return is_collided;
     }
 }
