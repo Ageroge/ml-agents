@@ -11,7 +11,6 @@ public class ArrowScript : MonoBehaviour
     void Start()
     {
         is_collided = false;
-        Debug.Log("is_collided set back to false");
     }
 
     // Update is called once per frame
@@ -24,7 +23,6 @@ public class ArrowScript : MonoBehaviour
     {
         if (collided.gameObject.tag == "swordsman")
         {
-            Debug.Log("arrow-swordsman");
             is_collided = true;
         }
 

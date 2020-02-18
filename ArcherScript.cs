@@ -21,10 +21,13 @@ public class ArcherScript : Agent
     // Is archer collided by swordsman?
     private bool is_collided = false;
 
+    GameObject instArrow;
+
     void Start()
     {
         //        hunter = GameObject.Find("Hunter_agent");
         targetTime = targetTime_g;
+        instArrow = arrow;
     }
 
     public override void AgentReset()
@@ -62,6 +65,8 @@ public class ArcherScript : Agent
 
         Vector3 delta = new Vector3(vectorAction[0], 0.5f, vectorAction[1]);
 
+        //Debug.Log(delta);
+
         // Determine which direction to rotate towards
         Vector3 targetDirection = swordsman.transform.localPosition - this.transform.localPosition + delta;
 
@@ -88,11 +93,11 @@ public class ArcherScript : Agent
         ///// HOWTO ch
 
         // Target is dead
-        bool hitByArrow = arrow.GetComponent<ArrowScript>().is_collided;
-        Debug.Log(arrow.GetComponent<ArrowScript>().is_collided);
-        if (hitByArrow)
+//        Debug.Log(instArrow.GetComponent<ArrowScript>().is_collided);
+        if (instArrow != null && instArrow.GetComponent<ArrowScript>().is_collided)
         {
-            Debug.Log("Arrow collided with swordsman");
+            instArrow.GetComponent<ArrowScript>().is_collided = false;
+//            Debug.Log("Arrow collided with swordsman");
             AddReward(0.5f);
             Done();
         }
@@ -107,7 +112,7 @@ public class ArcherScript : Agent
 
     void Shoot()
     {
-        GameObject instArrow = Instantiate(arrow, transform.position, Quaternion.identity) as GameObject;
+        instArrow = Instantiate(arrow, transform.position, Quaternion.identity) as GameObject;
         Rigidbody instArrowRigidbody = instArrow.GetComponent<Rigidbody>();
 
         instArrowRigidbody.velocity = transform.TransformDirection(Vector3.forward * arrow_speed);
