@@ -135,6 +135,7 @@ GameObject:
   - component: {fileID: 605919542}
   - component: {fileID: 605919541}
   - component: {fileID: 605919546}
+  - component: {fileID: 605919547}
   m_Layer: 0
   m_Name: Swordsman
   m_TagString: swordsman
@@ -275,6 +276,21 @@ MonoBehaviour:
   m_BehaviorName: SwordsmanBrain
   m_TeamID: 1
   m_UseChildSensors: 1
+--- !u!114 &605919547
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 605919539}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3a5c9d521e5ef4759a8246a07d52221e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  DecisionPeriod: 5
+  RepeatAction: 1
+  offsetStep: 0
 --- !u!1 &705507993
 GameObject:
   m_ObjectHideFlags: 0
@@ -380,6 +396,7 @@ GameObject:
   - component: {fileID: 785620509}
   - component: {fileID: 785620512}
   - component: {fileID: 785620513}
+  - component: {fileID: 785620514}
   m_Layer: 0
   m_Name: Archer
   m_TagString: Untagged
@@ -503,8 +520,23 @@ MonoBehaviour:
   m_InferenceDevice: 0
   m_BehaviorType: 2
   m_BehaviorName: ArcherBrain
-  m_TeamID: 1
+  m_TeamID: 0
   m_UseChildSensors: 1
+--- !u!114 &785620514
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 785620507}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3a5c9d521e5ef4759a8246a07d52221e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  DecisionPeriod: 5
+  RepeatAction: 1
+  offsetStep: 0
 --- !u!1 &963194225
 GameObject:
   m_ObjectHideFlags: 0
