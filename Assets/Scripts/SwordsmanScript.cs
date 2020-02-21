@@ -1,74 +1,83 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using MLAgents;
 
 public class SwordsmanScript : Agent
 {
-    // hit points of swordsman. if 0, then he is dead
-    public int hitpoints_g = 2;
-    // speed of agent. Value is overridden in Unity interface.
-    public float speed = 12;
+    // Hit points of swordsman. if 0, then he is dead
+    [SerializeField] int MaxHp = 2;
+    // Speed of agent. Value is overridden in Unity interface.
+    [SerializeField] float Speed = 12;
 
-    Rigidbody rBody;
+    [SerializeField] ArcherScript Target = null;
 
-    // Is agent collided with arrow?
-    private bool is_collided = false;
     // Size of arena. Need to pass it automatically somehow?
-    int arenaSizeX = 16;
-    int arenaSizeY = 16;
-    // minimal distance between agent and target
-    float minDistanceToTarget;
-    int hitpoints = 1;
+    [SerializeField] Vector2 ArenaSize = new Vector2(16, 16);
+
+
+    Rigidbody Rigidbody;
+
+    // Minimal reached distance between agent and target
+    float MinDistanceToTarget;
+    int CurrentHp = 1;
+
+    Vector3 CurrentPushDirection;
+
 
     void Start()
     {
-        rBody = GetComponent<Rigidbody>();
+        Rigidbody = GetComponent<Rigidbody>();
     }
 
-    public Transform Target1;
-    public Transform Target2;
-    // HOW to ADD another archer???
+    void Update()
+    {
+        // Push agent do not stay on one place forever. time is time
+        AddReward(-0.0001f);
+
+        CheckTarget();
+
+        Debug.DrawRay(transform.position, CurrentPushDirection.normalized * 5, Color.magenta);
+    }
 
     public override void AgentReset()
     {
         // Move the target to a new spot
-        float randomVal1 = Random.value;
-        float randomVal2 = Random.value;
-        float randomVal3 = Random.value;
-        if (randomVal3 <= 0.5f) {
-            if (randomVal1 <= 0.5f) randomVal1 = 0.0f;  else randomVal1 = 1.0f;
+        float xPosition = Random.value;
+        float yPosition = Random.value;
+        if (Random.value <= 0.5f)
+        {
+            xPosition = xPosition <= 0.5f ? 0.0f : 1.0f;
         }
-        else {
-            if (randomVal2 <= 0.5f) randomVal2 = 0.0f; else randomVal2 = 1.0f;
+        else
+        {
+            yPosition = yPosition <= 0.5f ? 0.0f : 1.0f;
         }
 
-//        Target1.localPosition = new Vector3(randomVal1 * arenaSizeX - arenaSizeX / 2, 0.5f, randomVal2 * arenaSizeY - arenaSizeY / 2);
+        // Set opposite position to archer (target) (Xorboo: random values are not related to an archer in any way)
+        transform.localPosition = new Vector3(-ArenaSize.x * (xPosition - 0.5f), 0.5f, -ArenaSize.y * (yPosition - 0.5f));
 
-        // zero momentum of agent
-        this.rBody.angularVelocity = Vector3.zero;
-        this.rBody.velocity = Vector3.zero;
-        // set opposite position to archer (target)
-        this.transform.localPosition = new Vector3(-(randomVal1 * arenaSizeX - arenaSizeX / 2), 0.5f, -(randomVal2 * arenaSizeY - arenaSizeY / 2));
-        hitpoints = hitpoints_g;
-        is_collided = false;
+        // Restore HP
+        CurrentHp = MaxHp;
 
-        // initialize minimal distance of agent to target. Will be used to rewards further
-        minDistanceToTarget = Vector3.Distance(this.transform.localPosition, Target1.localPosition);
+        // Zero momentum of agent
+        Rigidbody.angularVelocity = Vector3.zero;
+        Rigidbody.velocity = Vector3.zero;
+
+        // Initialize minimal distance of agent to target. Will be used to rewards further
+        MinDistanceToTarget = Vector3.Distance(transform.localPosition, Target.transform.localPosition);
     }
 
     public override void CollectObservations()
     {
         // Target and Agent positions
-        AddVectorObs(Target1.localPosition);
-        AddVectorObs(this.transform.localPosition);
+        AddVectorObs(Target.transform.localPosition);
+        AddVectorObs(transform.localPosition);
 
         // Agent velocity
-        AddVectorObs(rBody.velocity.x);
-        AddVectorObs(rBody.velocity.z);
+        AddVectorObs(Rigidbody.velocity.x);
+        AddVectorObs(Rigidbody.velocity.z);
 
         // Agent hitpoints
-//        AddVectorObs(this.hitpoints);
+        // AddVectorObs(this.CurrentHp);
     }
 
     //
@@ -78,45 +87,8 @@ public class SwordsmanScript : Agent
     public override void AgentAction(float[] vectorAction)
     {
         // Actions, size = 2
-        Vector3 controlSignal = Vector3.zero;
-        controlSignal.x = vectorAction[0];
-        controlSignal.z = vectorAction[1];
-        rBody.AddForce(controlSignal * speed);
-
-        float distanceToTarget = Vector3.Distance(this.transform.localPosition,
-                                                  Target1.localPosition);
-
-        // if agents is closer to the target, give him small award
-        // and penatly otherwise
-        if (distanceToTarget < minDistanceToTarget) {
-            AddReward(0.003f);
-            minDistanceToTarget = distanceToTarget;
-        }
-        else AddReward(-0.001f);
-
-        // Reached target
-        if (distanceToTarget < 1.0f) {
-            AddReward(1.0f);
-            Done();
-        }
-
-        // Fell off platform
-        if (this.transform.localPosition.y < 0) {
-            AddReward(-1.0f);
-            Done();
-        }
-        // Hit by arrow and maybe even killed
-        if (is_collided) {
-            AddReward(-0.5f);
-            hitpoints--;
-            is_collided = false;
-            if (hitpoints == 0) {
-                AddReward(-1.0f);
-                Done();
-            }
-        }
-        // Push agent do not stay on one place forever. time is time
-        AddReward(-0.0001f);
+        CurrentPushDirection = new Vector3(vectorAction[0], 0.0f, vectorAction[1]);
+        Rigidbody.AddForce(CurrentPushDirection * Speed);
     }
 
     public override float[] Heuristic()
@@ -126,17 +98,48 @@ public class SwordsmanScript : Agent
         action[1] = Input.GetAxis("Vertical");
         return action;
     }
-
-    void OnCollisionEnter(Collision collided)
+    
+    public void OnHitByArrow()
     {
-        if (collided.gameObject.tag == "arrow")
-        {
-            is_collided = true;
-        }
+        AddReward(-0.5f);
+        CurrentHp--;
 
+        if (CurrentHp == 0)
+        {
+            AddReward(-1.0f);
+            Done();
+        }
     }
 
-    public bool GetCollision() {
-        return is_collided;
+    void CheckTarget()
+    {
+        float distanceToTarget = Vector3.Distance(transform.localPosition, Target.transform.localPosition);
+
+        // if agents is closer to the target, give him small award
+        // and penatly otherwise
+        if (distanceToTarget < MinDistanceToTarget)
+        {
+            AddReward(0.003f);
+            MinDistanceToTarget = distanceToTarget;
+        }
+        else
+        {
+            AddReward(-0.001f);
+        }
+
+        // Reached target
+        if (distanceToTarget < 1.0f)
+        {
+            AddReward(1.0f);
+            Target.OnHitByEnemy();
+            Done();
+        }
+
+        // Fell off platform
+        if (transform.localPosition.y < 0)
+        {
+            AddReward(-1.0f);
+            Done();
+        }
     }
 }

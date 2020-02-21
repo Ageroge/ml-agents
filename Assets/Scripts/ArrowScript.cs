@@ -1,30 +1,29 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System;
 using UnityEngine;
 
 public class ArrowScript : MonoBehaviour
 {
+    public event Action<ArrowScript> OnArrowHit = delegate { };
 
-    public bool is_collided;
-
-    // Start is called before the first frame update
-    void Start()
-    {
-        is_collided = false;
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+    bool HasHit = false;
 
     void OnCollisionEnter(Collision collided)
     {
-        if (collided.gameObject.tag == "swordsman")
+        if (HasHit)
         {
-            is_collided = true;
+            Debug.LogWarning($"Arrow hit multiple times");
+            return;
         }
 
+        var swordsman = collided.gameObject.GetComponent<SwordsmanScript>();
+        if (swordsman)
+        {
+            HasHit = true;
+
+            swordsman.OnHitByArrow();
+            OnArrowHit(this);
+
+            Destroy(gameObject);
+        }
     }
 }

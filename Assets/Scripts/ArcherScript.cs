@@ -3,64 +3,85 @@ using MLAgents;
 
 public class ArcherScript : Agent
 {
-    // public Rigidbody projectile;
-    public GameObject arrow;
-    public float arrow_speed = 20;
-    // speed of rotating archer
-    public float angle_speed = 2.0f;
-    // timer to make delays between shots
-    public float targetTime_g = 2.5f;
+    [SerializeField] ArrowScript ArrowPrefab = null;
 
-    public GameObject swordsman;
+    [SerializeField] float ArrowSpeed = 20;
 
-    float targetTime;
+    // Speed of rotating archer
+    [SerializeField] float AngleSpeed = 2.0f;
+
+    // Timer to make delays between shots
+    [SerializeField] float ShootDelay = 2.5f;
+
+    // Lifetime of arrow
+    [SerializeField] float ArrowLifetime = 2.0f;
+
+    [SerializeField] GameObject TargetSwordsman = null;
+
+
     // Size of arena. Need to pass it automatically somehow?
-    int arenaSizeX = 16;
-    int arenaSizeY = 16;
+    [SerializeField] Vector2 ArenaSize = new Vector2(16, 16);
+    
+    float CurrentShootDelay;
 
-    // Is archer collided by swordsman?
-    private bool is_collided = false;
+    // Archer rotation parameters
+    Vector3 DesiredDirection;
+    Vector3 CurrentDirection;
 
-    GameObject instArrow;
 
     void Start()
     {
-        //        hunter = GameObject.Find("Hunter_agent");
-        targetTime = targetTime_g;
-        instArrow = arrow;
+        // hunter = GameObject.Find("Hunter_agent");
+        CurrentShootDelay = ShootDelay;
+    }
+
+    void Update()
+    {
+        // Rotate archer
+        RotateTowardsTarget();
+
+        // Draw a ray pointing at our target in
+        Debug.DrawRay(transform.position, CurrentDirection.normalized * 10, Color.red);
+        Debug.DrawRay(transform.position, DesiredDirection.normalized * 10, Color.green);
+
+        // Shoot an arrow if needed
+        CurrentShootDelay -= Time.deltaTime;
+        // if (Input.GetButtonDown("Fire1"))
+        if (CurrentShootDelay <= 0.0f)
+        {
+            CurrentShootDelay = ShootDelay;
+            Shoot();
+        }
     }
 
     public override void AgentReset()
     {
         // Move the agent to a new spot
-        float randomVal1 = Random.value;
-        float randomVal2 = Random.value;
-        float randomVal3 = Random.value;
-        if (randomVal3 <= 0.5f)
+        float xPosition = Random.value;
+        float yPosition = Random.value;
+        if (Random.value <= 0.5f)
         {
-            if (randomVal1 <= 0.5f) randomVal1 = 0.0f; else randomVal1 = 1.0f;
+            xPosition = xPosition <= 0.5f ? 0.0f : 1.0f;
         }
         else
         {
-            if (randomVal2 <= 0.5f) randomVal2 = 0.0f; else randomVal2 = 1.0f;
+            yPosition = yPosition <= 0.5f ? 0.0f : 1.0f;
         }
-        this.transform.localPosition = new Vector3(randomVal1 * arenaSizeX - arenaSizeX / 2, 0.5f, randomVal2 * arenaSizeY - arenaSizeY / 2);
-        is_collided = false;
-//        Debug.Log("Archer reset");
 
+        transform.localPosition = new Vector3( ArenaSize.x * (xPosition - 0.5f), 0.5f, ArenaSize.y * (yPosition - 0.5f));
+        // Debug.Log("Archer reset");
     }
 
     public override void CollectObservations()
     {
         // Target and Agent positions
-        AddVectorObs(swordsman.transform.localPosition);
-        // should we really recall previous position of swordsman?
-//        AddVectorObs(swordsman.prevLocalPosition);
+        AddVectorObs(TargetSwordsman.transform.localPosition);
+        // Should we really recall previous position of swordsman?
+        // AddVectorObs(swordsman.prevLocalPosition);
         AddVectorObs(this.transform.localPosition);
 
         // Agent rotation
         AddVectorObs(this.transform.rotation);
-
     }
 
     // vectorAction[] is passed by brains of the agent. Brains here is Behavior Parameters script.
@@ -73,71 +94,45 @@ public class ArcherScript : Agent
         // to find where to shoot.
         // - shoot
 
-        Vector3 delta = new Vector3(vectorAction[0], 0.5f, vectorAction[1]);
-
-        //Debug.Log(delta);
+        Vector3 delta = new Vector3(vectorAction[0], 0f, vectorAction[1]);
+        // Debug.Log(delta);
 
         // Determine which direction to rotate towards
-        Vector3 targetDirection = swordsman.transform.localPosition - this.transform.localPosition + delta;
+        DesiredDirection = TargetSwordsman.transform.localPosition - transform.localPosition + delta;
+        DesiredDirection.y = 0f;
+    }
 
+    void RotateTowardsTarget()
+    {
         // The step size is equal to speed times frame time.
-        float singleStep = angle_speed * Time.deltaTime;
+        float singleStep = AngleSpeed * Time.deltaTime;
 
         // Rotate the forward vector towards the target direction by one step
-        Vector3 newDirection = Vector3.RotateTowards(transform.forward, targetDirection, singleStep, 0.0f);
-
-        // Draw a ray pointing at our target in
-        Debug.DrawRay(this.transform.localPosition, newDirection, Color.red);
+        CurrentDirection = Vector3.RotateTowards(transform.forward, DesiredDirection, singleStep, 0.0f);
 
         // Calculate a rotation a step closer to the target and applies rotation to this object
-        transform.rotation = Quaternion.LookRotation(newDirection);
-
-        targetTime -= Time.deltaTime;
-        //        if (Input.GetButtonDown("Fire1"))
-        if (targetTime <= 0.0f)
-        {
-            targetTime = targetTime_g;
-            Shoot();
-        }
-
-        ///// HOWTO ch
-
-        // Target is dead
-//        Debug.Log(instArrow.GetComponent<ArrowScript>().is_collided);
-        if (instArrow != null && instArrow.GetComponent<ArrowScript>().is_collided)
-        {
-            instArrow.GetComponent<ArrowScript>().is_collided = false;
-//            Debug.Log("Arrow collided with swordsman");
-            AddReward(0.5f);
-            Done();
-        }
-
-        // Hit by swordsman
-        if (is_collided)
-        {
-//            Debug.Log("hit by swordsman");
-            AddReward(-0.5f);
-            Done();
-        }
+        transform.rotation = Quaternion.LookRotation(CurrentDirection);
     }
 
     void Shoot()
     {
-        instArrow = Instantiate(arrow, transform.position, Quaternion.identity) as GameObject;
-        Rigidbody instArrowRigidbody = instArrow.GetComponent<Rigidbody>();
+        var arrow = Instantiate(ArrowPrefab, transform.position, Quaternion.identity);
+        arrow.OnArrowHit += OnArrowHit;
 
-        instArrowRigidbody.velocity = transform.TransformDirection(Vector3.forward * arrow_speed);
+        Rigidbody instArrowRigidbody = arrow.GetComponent<Rigidbody>();
+        instArrowRigidbody.velocity = transform.TransformDirection(Vector3.forward * ArrowSpeed);
 
-        Destroy(instArrow, 2.0f); // 1 - time in seconds. time live range of arrow
+        // Destroy after ArrowLifetime seconds
+        Destroy(arrow.gameObject, ArrowLifetime);
     }
 
-    void OnCollisionEnter(Collision collided)
+    void OnArrowHit(ArrowScript arrow)
     {
-        if (collided.gameObject.tag == "swordsman")
-        {
-            is_collided = true;
-        }
+        // Target is dead (Xorboo: just a hit, swordsman might not be actually dead yet)
 
+        // Debug.Log("Arrow collided with swordsman");
+        AddReward(0.5f);
+        Done();
     }
 
     public override float[] Heuristic()
@@ -181,4 +176,11 @@ public class ArcherScript : Agent
             }
         }
     */
+
+    public void OnHitByEnemy()
+    {
+        // Debug.Log("Hit by swordsman");
+        AddReward(-0.5f);
+        Done();
+    }
 }
