@@ -271,9 +271,9 @@ MonoBehaviour:
     vectorActionSpaceType: 1
   m_Model: {fileID: 5022602860645237092, guid: d8a9987e324cbcd4b9f7adfed595b032, type: 3}
   m_InferenceDevice: 0
-  m_BehaviorType: 0
+  m_BehaviorType: 2
   m_BehaviorName: SwordsmanBrain
-  m_TeamID: 0
+  m_TeamID: 1
   m_UseChildSensors: 1
 --- !u!1 &705507993
 GameObject:
